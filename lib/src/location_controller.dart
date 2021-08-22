@@ -6,8 +6,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 class LocationControllerImpl implements LocationController {
-  final StreamController<LatLngData> _controller =
-      StreamController<LatLngData>.broadcast();
+  final StreamController<Position> _controller =
+      StreamController<Position>.broadcast();
   StreamSubscription<Position>? _onLocationChangedSub;
   StreamSubscription<CompassEvent>? _compassEventsSub;
 
@@ -55,15 +55,14 @@ class LocationControllerImpl implements LocationController {
     return Future<bool>.value(true);
   }
 
-  Stream<LatLngData> subscribePosition(
+  Stream<Position> subscribePosition(
       Duration intervalDuration, LocationAccuracy locationAccuracy) {
     _isSubscribed = true;
     _onLocationChangedSub = Geolocator.getPositionStream(
             intervalDuration: intervalDuration,
             desiredAccuracy: locationAccuracy)
         .listen((Position ld) {
-      _controller
-          .add(LatLngData(LatLng(ld.latitude, ld.longitude), ld.accuracy));
+      _controller.add(ld);
     }, onError: (Object error) {
       _controller.addError(error);
     }, onDone: () {

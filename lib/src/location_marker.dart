@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map_location/src/types.dart';
+import 'package:geolocator/geolocator.dart';
 
 double _degree2Radian(double degree) {
   return degree * pi / 180.0;
@@ -11,12 +12,13 @@ class LocationMarker extends StatelessWidget {
   const LocationMarker(this.ld, this.heading, {Key? key}) : super(key: key);
 
   static final CustomPainter headingerPainter = LocationMarkerHeading();
-  final LatLngData ld;
+  final Position ld;
   final ValueNotifier<double?> heading;
 
   @override
   Widget build(BuildContext context) {
-    final double diameter = ld.highAccuracy() ? 22.0 : 80.0;
+    final double diameter =
+        ld.accuracy > 0.0 && ld.accuracy <= 30.0 ? 22.0 : 80.0;
     return Container(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -32,7 +34,7 @@ class LocationMarker extends StatelessWidget {
                       return Container();
                     }
                     // Only display heading for an accurate location.
-                    if (!ld.highAccuracy()) {
+                    if (!(ld.accuracy > 0.0 && ld.accuracy <= 30.0)) {
                       return Container();
                     }
                     return Transform.rotate(

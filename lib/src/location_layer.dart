@@ -6,19 +6,20 @@ import 'package:flutter_compass/flutter_compass.dart' show CompassEvent;
 import 'package:flutter_map/plugin_api.dart';
 import 'package:flutter_map_location/flutter_map_location.dart';
 import 'package:flutter_map_location/src/location_controller.dart';
-import 'package:flutter_map_location/src/types.dart';
 import 'package:geolocator/geolocator.dart'
-    show Geolocator, LocationServiceDisabledException;
+    show Geolocator, LocationServiceDisabledException, Position;
+import 'package:latlong2/latlong.dart';
 
 import 'location_marker.dart';
 import 'location_options.dart';
 import 'types.dart';
 
 LocationMarkerBuilder _defaultMarkerBuilder =
-    (BuildContext context, LatLngData ld, ValueNotifier<double?> heading) {
-  final double diameter = ld.highAccuracy() ? 60.0 : 120.0;
+    (BuildContext context, Position ld, ValueNotifier<double?> heading) {
+  final double diameter =
+      ld.accuracy > 0.0 && ld.accuracy <= 30.0 ? 60.0 : 120.0;
   return Marker(
-    point: ld.location,
+    point: LatLng(ld.latitude, ld.longitude),
     builder: (_) => LocationMarker(ld, heading),
     height: diameter,
     width: diameter,
@@ -42,11 +43,11 @@ class _LocationLayerState extends State<LocationLayer>
     with WidgetsBindingObserver {
   final ValueNotifier<LocationServiceStatus> _serviceStatus =
       ValueNotifier<LocationServiceStatus>(LocationServiceStatus.unknown);
-  final ValueNotifier<LatLngData?> _location = ValueNotifier<LatLngData?>(null);
+  final ValueNotifier<Position?> _location = ValueNotifier<Position?>(null);
   final ValueNotifier<double?> _heading = ValueNotifier<double?>(null);
   late final LocationControllerImpl _controller;
 
-  StreamSubscription<LatLngData>? _locationSub;
+  StreamSubscription<Position>? _locationSub;
   bool _locationRequested = false;
 
   @override
@@ -99,9 +100,9 @@ class _LocationLayerState extends State<LocationLayer>
     return Container(
         child: Stack(
       children: <Widget>[
-        ValueListenableBuilder<LatLngData?>(
+        ValueListenableBuilder<Position?>(
             valueListenable: _location,
-            builder: (BuildContext context, LatLngData? ld, Widget? child) {
+            builder: (BuildContext context, Position? ld, Widget? child) {
               if (ld == null) {
                 return Container();
               }
@@ -140,7 +141,7 @@ class _LocationLayerState extends State<LocationLayer>
     _locationSub = _controller
         .subscribePosition(
             widget.options.updateInterval, widget.options.locationAccuracy)
-        .listen((LatLngData loc) {
+        .listen((Position loc) {
       _location.value = loc;
       widget.options.onLocationUpdate?.call(loc);
       if (_locationRequested) {

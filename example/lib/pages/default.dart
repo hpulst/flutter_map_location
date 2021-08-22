@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location/flutter_map_location.dart';
+import 'package:geolocator/geolocator.dart' show Position;
+import 'package:latlong2/latlong.dart' as latlong2;
 
 import '../widgets/drawer.dart';
 
@@ -42,15 +44,15 @@ class _DefaultPageState extends State<DefaultPage> {
               // USAGE NOTE 3: Add the options for the plugin
               LocationOptions(
                 locationButton(),
-                onLocationUpdate: (LatLngData? ld) {
-                  print(
-                      'Location updated: ${ld?.location} (accuracy: ${ld?.accuracy})');
+                onLocationUpdate: (Position? ld) {
+                  print('Location updated: $ld (accuracy: ${ld?.accuracy})');
                 },
-                onLocationRequested: (LatLngData? ld) {
+                onLocationRequested: (Position? ld) {
                   if (ld == null) {
                     return;
                   }
-                  mapController.move(ld.location, 16.0);
+                  mapController.move(
+                      latlong2.LatLng(ld.latitude, ld.longitude), 16.0);
                 },
               ),
             ],
